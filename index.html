@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="day" data-mode="beginner">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>島先生的時間管理日記｜台灣島互動導覽地圖</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <style>
+/* ==========================================================================
+   島先生的時間管理日記｜台灣島互動導覽（大字體精簡版）
+   支援：白天模式 (day) / 夜間模式 (night) × 初學者 (beginner) / 老鳥模式 (pro)
+   ========================================================================== */
+
+:root {
+  --bg-top: #d8f3f8;
+  --bg-mid: #e9f7f5;
+  --bg-bot: #f7f4ea;
+  --surface: rgba(255, 255, 255, 0.9);
+  --surface-strong: #ffffff;
+  --surface-soft: #f2f8f6;
+  --border: rgba(22, 125, 141, 0.18);
+  --border-strong: rgba(22, 125, 141, 0.36);
+
+  --text-main: #153138;
+  --text-muted: #426169;
+  --text-soft: #647f86;
+
+  --accent: #167d8d;
+  --accent-hover: #10606d;
+  --accent-soft: rgba(22, 125, 141, 0.12);
+  --warm: #d97736;
+  --warm-soft: rgba(217, 119, 54, 0.14);
+  --green: #2d8a61;
+  --green-soft: rgba(45, 138, 97, 0.13);
+  --purple: #6b52ae;
+  --purple-soft: rgba(107, 82, 174, 0.13);
+
+  --island-fill: url(#islandGradDay);
+  --island-stroke: #1b4332;
+  --coast-stroke: rgba(22, 125, 141, 0.35);
+  --mountain-stroke: #ffffff;
+  --route-color: #d97736;
+  --relation-color: #7c3aed;
+
+  --node-bg: #ffffff;
+  --node-border: #167d8d;
+  --node-active-bg: #fff7ed;
+  --node-active-border: #d97736;
+  --label-bg: rgba(255, 255, 255, 0.96);
+  --label-text: #153138;
+
+  --shadow-sm: 0 4px 14px rgba(16, 62, 74, 0.08);
+  --shadow-md: 0 12px 32px rgba(16, 62, 74, 0.12);
+  --radius-lg: 22px;
+  --radius-md: 14px;
+}
+
+html {
+  font-size: 18.5px;
+}
+
+html[data-theme="night"] {
+  --bg-top: #07131d;
+  --bg-mid: #0c1f2e;
+  --bg-bot: #112a3b;
+  --surface: rgba(16, 36, 52, 0.88);
+  --surface-strong: #132c40;
+  --surface-soft: rgba(255, 255, 255, 0.06);
+  --border: rgba(114, 214, 224, 0.2);
+  --border-strong: rgba(114, 214, 224, 0.42);
+
+  --text-main: #eef8fa;
+  --text-muted: #b0cfd9;
+  --text-soft: #88adb9;
+
+  --accent: #4ad0dc;
+  --accent-hover: #70dfe9;
+  --accent-soft: rgba(74, 208, 220, 0.16);
+  --warm: #f5a65b;
+  --warm-soft: rgba(245, 166, 91, 0.16);
+  --green: #5cd6a0;
+  --green-soft: rgba(92, 214, 160, 0.15);
+  --purple: #b89aff;
+  --purple-soft: rgba(184, 154, 255, 0.16);
+
+  --island-fill: url(#islandGradNight);
+  --island-stroke: #4ad0dc;
+  --coast-stroke: rgba(74, 208, 220, 0.35);
+  --mountain-stroke: #6ee7e7;
+  --route-color: #f5a65b;
+  --relation-color: #c084fc;
+
+  --node-bg: #0f2536;
+  --node-border: #4ad0dc;
+  --node-active-bg: #26221c;
+  --node-active-border: #f5a65b;
+  --label-bg: rgba(12, 31, 46, 0.94);
+  --label-text: #eef8fa;
+
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 14px 36px rgba(0, 0, 0, 0.42);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Noto Sans TC", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text-main);
+  background: linear-gradient(160deg, var(--bg-top) 0%, var(--bg-mid) 52%, var(--bg-bot) 100%);
+  min-height: 100vh;
+  line-height: 1.65;
+  transition: background 0.45s ease, color 0.35s ease;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.ocean-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.stars { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease; }
+html[data-theme="night"] .stars { opacity: 1; }
+.star { position: absolute; border-radius: 50%; background: #ffffff; animation: twinkle 3.6s infinite ease-in-out; }
+@keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.9); } 50% { opacity: 0.9; transform: scale(1.25); } }
+.wave { position: absolute; left: -10%; width: 120%; height: 180px; border-radius: 50%; opacity: 0.12; background: var(--accent); filter: blur(42px); }
+.wave-1 { bottom: -90px; }
+.wave-2 { top: -110px; opacity: 0.08; }
+
+.topbar { position: relative; z-index: 10; max-width: 1320px; margin: 0 auto; padding: 20px 24px 10px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-badge { width: 52px; height: 52px; border-radius: 15px; background: var(--surface-strong); border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: grid; place-items: center; font-size: 28px; }
+.brand-text h1 { font-size: 1.38rem; font-weight: 900; letter-spacing: 0.02em; line-height: 1.25; }
+.brand-sub { font-size: 0.9rem; color: var(--text-muted); }
+.controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.segmented-control { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.seg-btn { border: none; background: transparent; color: var(--text-muted); font-family: inherit; font-size: 0.94rem; font-weight: 700; padding: 8px 16px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.22s ease; }
+.seg-btn:hover { color: var(--text-main); }
+.seg-btn.active { background: var(--accent); color: #ffffff; box-shadow: 0 3px 10px rgba(22, 125, 141, 0.28); }
+html[data-theme="night"] .seg-btn.active { color: #062129; }
+.theme-btn { border: 1px solid var(--border); background: var(--surface); color: var(--text-main); font-family: inherit; font-size: 0.94rem; font-weight: 700; padding: 9px 16px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm); transition: transform 0.18s ease, border-color 0.2s ease; }
+.theme-btn:hover { transform: translateY(-1px); border-color: var(--border-strong); }
+.notion-home-btn { text-decoration: none; font-size: 0.94rem; font-weight: 700; padding: 10px 18px; border-radius: 999px; background: var(--warm); color: #ffffff; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(217, 119, 54, 0.25); transition: transform 0.18s ease, filter 0.2s ease; }
+.notion-home-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+html[data-theme="night"] .notion-home-btn { color: #1f1307; }
+
+.mode-banner { position: relative; z-index: 10; max-width: 1320px; margin: 10px auto 18px; padding: 0 24px; }
+.banner-inner { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: var(--shadow-sm); }
+.banner-tag { font-size: 0.9rem; font-weight: 800; padding: 5px 14px; border-radius: 999px; background: var(--green-soft); color: var(--green); white-space: nowrap; }
+html[data-mode="pro"] .banner-tag { background: var(--purple-soft); color: var(--purple); }
+.banner-inner p { font-size: 0.98rem; color: var(--text-muted); flex: 1; }
+.stepper { margin-top: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.step-pill { border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-family: inherit; font-size: 0.92rem; font-weight: 700; padding: 8px 15px; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; }
+.step-pill:hover { border-color: var(--accent); color: var(--text-main); }
+.step-pill.active { background: var(--warm); border-color: var(--warm); color: #ffffff; }
+html[data-theme="night"] .step-pill.active { color: #1f1307; }
+.step-arrow { color: var(--text-soft); font-weight: 700; font-size: 0.95rem; }
+
+.main-layout { position: relative; z-index: 10; max-width: 1320px; margin: 0 auto; padding: 0 24px 40px; display: grid; grid-template-columns: minmax(360px, 0.98fr) minmax(380px, 1.22fr); gap: 24px; align-items: start; }
+.map-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; box-shadow: var(--shadow-md); position: sticky; top: 18px; }
+.map-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.map-header h2 { font-size: 1.15rem; font-weight: 800; }
+.map-hint { font-size: 0.88rem; color: var(--text-muted); }
+.map-legend { display: flex; gap: 12px; font-size: 0.84rem; color: var(--text-muted); }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot-route { background: var(--route-color); }
+.dot-relation { background: var(--relation-color); }
+.pro-only { display: none; }
+html[data-mode="pro"] .pro-only { display: inline-flex; }
+
+.svg-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; padding: 6px 0; }
+#taiwanMap { width: 100%; max-width: 470px; height: auto; overflow: visible; color: var(--accent); }
+.taiwan-land { fill: var(--island-fill); stroke: var(--island-stroke); stroke-width: 2.3; transition: fill 0.4s ease, stroke 0.4s ease; }
+html[data-theme="night"] .taiwan-land { filter: url(#glow); }
+.coast-ripple { stroke: var(--coast-stroke); animation: dashMove 26s linear infinite; }
+.mountain-ridge { stroke: var(--mountain-stroke); }
+.region-label { font-size: 12.5px; font-weight: 700; fill: rgba(255, 255, 255, 0.88); pointer-events: none; }
+html[data-theme="night"] .region-label { fill: rgba(173, 238, 245, 0.85); }
+.route-path { stroke: var(--route-color); stroke-width: 3.2; stroke-dasharray: 7 6; animation: dashMove 12s linear infinite; }
+.route-arrow-fill { fill: var(--route-color); }
+@keyframes dashMove { to { stroke-dashoffset: -120; } }
+.relation-lines { opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
+html[data-mode="pro"] .relation-lines { opacity: 1; }
+.relation-path { stroke: var(--relation-color); stroke-width: 2.8; stroke-dasharray: 4 4; }
+.relation-arrow-fill { fill: var(--relation-color); }
+.relation-pill-bg { fill: var(--surface-strong); stroke: var(--relation-color); stroke-width: 1.5; }
+.relation-pill-text { font-size: 11.5px; font-weight: 800; fill: var(--relation-color); }
+
+.station-node { cursor: pointer; outline: none; }
+.station-node .pulse-ring { fill: var(--warm); opacity: 0; transform-origin: center; }
+.station-node.active .pulse-ring { animation: pulse 2s ease-out infinite; }
+@keyframes pulse { 0% { opacity: 0.45; transform: scale(0.95); } 100% { opacity: 0; transform: scale(1.75); } }
+.station-node .node-bg { fill: var(--node-bg); stroke: var(--node-border); stroke-width: 3; transition: all 0.22s ease; }
+.station-node .node-bg-alt { stroke-dasharray: 4 2; }
+.station-node:hover .node-bg, .station-node:focus-visible .node-bg { stroke-width: 4; transform: scale(1.07); }
+.station-node.active .node-bg { fill: var(--node-active-bg); stroke: var(--node-active-border); stroke-width: 4; }
+.station-node .node-emoji { font-size: 21px; pointer-events: none; }
+.node-badge circle { fill: var(--accent); }
+.station-node.active .node-badge circle { fill: var(--warm); }
+.node-badge text { fill: #ffffff; font-size: 12.5px; font-weight: 900; }
+.node-label-box rect { fill: var(--label-bg); stroke: var(--border-strong); stroke-width: 1.4; }
+.station-node.active .node-label-box rect { stroke: var(--warm); stroke-width: 2.2; }
+.node-label-box text { fill: var(--label-text); font-size: 14px; font-weight: 800; }
+
+.rhythm-strip { margin-top: 12px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--surface-soft); border: 1px solid var(--border); text-align: center; }
+.rhythm-title { font-size: 0.86rem; font-weight: 700; color: var(--text-soft); margin-bottom: 4px; }
+.rhythm-flow { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.98rem; font-weight: 800; color: var(--accent); }
+.rhythm-flow i { font-style: normal; color: var(--text-soft); }
+
+.detail-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 26px; box-shadow: var(--shadow-md); animation: fadeUp 0.25s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.station-kicker { display: inline-flex; align-items: center; font-size: 0.88rem; font-weight: 800; color: var(--warm); background: var(--warm-soft); padding: 4px 12px; border-radius: 999px; margin-bottom: 8px; }
+.panel-head h2 { font-size: 1.52rem; font-weight: 900; line-height: 1.3; }
+.panel-subtitle { font-size: 1rem; color: var(--text-muted); margin-top: 6px; }
+.primary-cta { text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 12px; background: var(--accent); color: #ffffff; font-size: 0.96rem; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 12px rgba(22, 125, 141, 0.24); transition: transform 0.18s ease, background 0.2s ease; }
+.primary-cta:hover { transform: translateY(-1px); background: var(--accent-hover); }
+html[data-theme="night"] .primary-cta { color: #062129; }
+
+.section-block { margin-bottom: 22px; }
+.section-block:last-child { margin-bottom: 0; }
+.section-label { font-size: 0.98rem; font-weight: 800; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.steps-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.step-card { display: flex; gap: 14px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--surface-soft); border: 1px solid var(--border); align-items: flex-start; }
+.step-num { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #ffffff; font-size: 0.92rem; font-weight: 900; display: grid; place-items: center; flex-shrink: 0; margin-top: 2px; }
+html[data-theme="night"] .step-num { color: #062129; }
+.step-body strong { display: block; font-size: 1.04rem; margin-bottom: 3px; }
+.step-body p { font-size: 0.95rem; color: var(--text-muted); }
+
+.links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.notion-link-card { text-decoration: none; color: var(--text-main); padding: 14px 16px; border-radius: var(--radius-md); background: var(--surface-strong); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; transition: all 0.2s ease; }
+.notion-link-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.link-top { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1rem; }
+.link-top .ext { color: var(--accent); font-size: 0.95rem; }
+.link-desc { font-size: 0.88rem; color: var(--text-muted); }
+
+.tip-box { padding: 14px 18px; border-radius: var(--radius-md); background: var(--warm-soft); border-left: 4px solid var(--warm); font-size: 0.96rem; color: var(--text-main); }
+.arch-text { font-size: 0.98rem; color: var(--text-muted); }
+
+.schema-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+.schema-table th, .schema-table td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--border); }
+.schema-table th { background: var(--surface-soft); color: var(--text-muted); font-weight: 800; font-size: 0.86rem; }
+.schema-table tr:last-child td { border-bottom: none; }
+.type-badge { display: inline-block; font-size: 0.82rem; font-weight: 700; padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.type-badge.relation { background: var(--purple-soft); color: var(--purple); }
+.type-badge.formula { background: var(--warm-soft); color: var(--warm); }
+
+.hours-bar { display: flex; height: 20px; border-radius: 999px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border); }
+.hours-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; font-size: 0.9rem; }
+.hour-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; background: var(--surface-soft); }
+.hour-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+.panel-nav { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.nav-btn { border: 1px solid var(--border); background: var(--surface-strong); color: var(--text-main); font-family: inherit; font-size: 0.94rem; font-weight: 700; padding: 10px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; }
+.nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.footer { position: relative; z-index: 10; text-align: center; padding: 10px 24px 30px; font-size: 0.9rem; color: var(--text-soft); }
+.footer a { color: var(--accent); text-decoration: none; font-weight: 700; }
+.footer a:hover { text-decoration: underline; }
+
+@media (max-width: 960px) { .main-layout { grid-template-columns: 1fr; } .map-card { position: static; } }
+@media (max-width: 540px) { html { font-size: 17px; } .topbar { padding: 14px 16px 8px; } .mode-banner, .main-layout { padding-left: 16px; padding-right: 16px; } .detail-panel { padding: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="ocean-bg" aria-hidden="true">
+    <div class="stars" id="stars"></div>
+    <div class="wave wave-1"></div>
+    <div class="wave wave-2"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-badge">🏝️</div>
+      <div class="brand-text">
+        <h1>島先生的時間管理日記</h1>
+        <p class="brand-sub">台灣島互動操作導覽</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="segmented-control" role="group" aria-label="切換閱讀版本">
+        <button id="btnBeginner" class="seg-btn active" data-mode="beginner"><span>🌱</span><span>初學者</span></button>
+        <button id="btnPro" class="seg-btn" data-mode="pro"><span>🧭</span><span>老鳥模式</span></button>
+      </div>
+      <button id="themeToggle" class="theme-btn" aria-label="切換白天或夜間模式">
+        <span id="themeIcon">☀️</span><span id="themeLabel">白天</span>
+      </button>
+      <a href="https://app.notion.com/p/3-54a3dd902f7e83fcb38e01f32885689d" target="_blank" rel="noopener noreferrer" class="notion-home-btn">
+        <span>開啟 Notion 主頁 ↗</span>
+      </a>
+    </div>
+  </header>
+
+  <section class="mode-banner" id="modeBanner">
+    <div class="banner-inner">
+      <span class="banner-tag" id="bannerTag">🌱 初學者導覽</span>
+      <p id="bannerDesc">照著台灣島 <strong>1 → 2 → 3 → 4</strong> 點擊，就能看懂每天怎麼用，並直達對應 Notion 欄位。</p>
+    </div>
+    <div class="stepper" id="beginnerStepper">
+      <button class="step-pill active" data-station="inbox">1. 速記區</button>
+      <span class="step-arrow">→</span>
+      <button class="step-pill" data-station="tasks">2. 任務管理</button>
+      <span class="step-arrow">→</span>
+      <button class="step-pill" data-station="focus">3. 專注時光</button>
+      <span class="step-arrow">→</span>
+      <button class="step-pill" data-station="journal">4. TTL 日記</button>
+      <span class="step-arrow">·</span>
+      <button class="step-pill" data-station="persona">🏝️ 島先生</button>
+    </div>
+  </section>
+
+  <main class="main-layout">
+    <section class="map-card" aria-label="台灣島互動導覽地圖">
+      <div class="map-header">
+        <div>
+          <h2 id="mapTitle">🗺️ 台灣島環島地圖</h2>
+          <p class="map-hint" id="mapHint">點擊島上地標，查看教學與連結</p>
+        </div>
+        <div class="map-legend">
+          <span class="legend-item"><i class="dot dot-route"></i> 每日動線</span>
+          <span class="legend-item pro-only"><i class="dot dot-relation"></i> 資料庫關聯</span>
+        </div>
+      </div>
+
+      <div class="svg-wrapper">
+        <svg id="taiwanMap" viewBox="0 0 460 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="台灣島時間管理互動地圖">
+          <defs>
+            <linearGradient id="islandGradDay" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8fd9a8" />
+              <stop offset="50%" stop-color="#52b788" />
+              <stop offset="100%" stop-color="#2d6a4f" />
+            </linearGradient>
+            <linearGradient id="islandGradNight" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#1e4d5c" />
+              <stop offset="50%" stop-color="#143642" />
+              <stop offset="100%" stop-color="#0d252e" />
+            </linearGradient>
+            <filter id="islandShadow" x="-15%" y="-15%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#0a2e38" flood-opacity="0.22" />
+            </filter>
+            <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <marker id="arrowRoute" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" class="route-arrow-fill" />
+            </marker>
+            <marker id="arrowRelation" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" class="relation-arrow-fill" />
+            </marker>
+          </defs>
+
+          <g class="compass" transform="translate(395, 58)" opacity="0.65">
+            <circle cx="0" cy="0" r="24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3 3" />
+            <polygon points="0,-18 4,-4 0,-8 -4,-4" fill="currentColor" />
+            <polygon points="0,18 4,4 0,8 -4,4" fill="currentColor" opacity="0.4" />
+            <text x="0" y="-28" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">N</text>
+          </g>
+
+          <path class="coast-ripple" d="M 278 60 C 310 52, 342 66, 354 92 C 368 122, 344 150, 342 192 C 338 250, 326 320, 302 396 C 282 460, 266 518, 250 562 C 236 588, 212 586, 200 560 C 186 528, 174 486, 152 442 C 128 394, 114 342, 122 280 C 130 220, 158 164, 198 112 C 224 80, 250 66, 278 60 Z" fill="none" stroke-width="2" stroke-dasharray="6 8" />
+          <path class="taiwan-land" filter="url(#islandShadow)" d="M 276 74 C 298 66, 326 78, 336 96 C 348 116, 330 132, 328 158 C 326 188, 326 226, 318 268 C 308 320, 294 374, 278 424 C 264 466, 254 508, 244 544 C 238 564, 224 568, 216 552 C 208 534, 208 512, 196 488 C 180 456, 156 420, 144 376 C 132 332, 134 282, 148 232 C 162 182, 190 138, 224 104 C 242 86, 258 80, 276 74 Z" />
+          <path class="mountain-ridge" d="M 288 128 Q 272 200 258 278 T 236 446" fill="none" stroke-width="3" stroke-linecap="round" opacity="0.35" />
+          <path class="mountain-ridge" d="M 270 165 Q 254 235 240 315 T 222 420" fill="none" stroke-width="2" stroke-linecap="round" opacity="0.22" />
+
+          <g class="penghu-islands" filter="url(#islandShadow)">
+            <ellipse cx="76" cy="316" rx="19" ry="13" class="taiwan-land" />
+            <ellipse cx="62" cy="335" rx="8" ry="6" class="taiwan-land" />
+            <ellipse cx="92" cy="333" rx="6" ry="5" class="taiwan-land" />
+          </g>
+          <circle cx="176" cy="492" r="5" class="taiwan-land" opacity="0.85" />
+          <circle cx="332" cy="436" r="5" class="taiwan-land" opacity="0.85" />
+          <ellipse cx="338" cy="492" rx="7" ry="5" class="taiwan-land" opacity="0.85" />
+
+          <text x="278" y="96" class="region-label">北・台北</text>
+          <text x="172" y="218" class="region-label">中・台中</text>
+          <text x="302" y="274" class="region-label">東・花東</text>
+          <text x="174" y="452" class="region-label">南・台南</text>
+          <text x="76" y="360" class="region-label" text-anchor="middle">澎湖</text>
+
+          <g class="route-lines">
+            <path class="route-path" d="M 262 150 Q 214 180 204 224" fill="none" marker-end="url(#arrowRoute)" />
+            <path class="route-path" d="M 226 260 Q 266 266 284 290" fill="none" marker-end="url(#arrowRoute)" />
+            <path class="route-path" d="M 288 338 Q 254 374 224 396" fill="none" marker-end="url(#arrowRoute)" />
+          </g>
+
+          <g class="relation-lines">
+            <path class="relation-path" d="M 192 276 Q 156 332 190 384" fill="none" marker-start="url(#arrowRelation)" marker-end="url(#arrowRelation)" />
+            <rect x="114" y="316" width="82" height="26" rx="13" class="relation-pill-bg" />
+            <text x="155" y="333" text-anchor="middle" class="relation-pill-text">Relation ⇄</text>
+            <rect x="210" y="168" width="80" height="24" rx="12" class="relation-pill-bg" />
+            <text x="250" y="184" text-anchor="middle" class="relation-pill-text">按鈕建任務</text>
+          </g>
+
+          <g class="station-node active" data-station="inbox" transform="translate(274, 134)" tabindex="0" role="button" aria-label="第1站：速記區">
+            <circle class="pulse-ring" cx="0" cy="0" r="26" /><circle class="node-bg" cx="0" cy="0" r="22" />
+            <text class="node-emoji" x="0" y="7" text-anchor="middle">📝</text>
+            <g class="node-badge" transform="translate(17, -17)"><circle cx="0" cy="0" r="11" /><text x="0" y="4.5" text-anchor="middle">1</text></g>
+            <g class="node-label-box" transform="translate(32, -12)"><rect x="0" y="-14" width="90" height="30" rx="15" /><text x="45" y="6" text-anchor="middle">速記區</text></g>
+          </g>
+
+          <g class="station-node" data-station="tasks" transform="translate(202, 248)" tabindex="0" role="button" aria-label="第2站：任務管理">
+            <circle class="pulse-ring" cx="0" cy="0" r="26" /><circle class="node-bg" cx="0" cy="0" r="22" />
+            <text class="node-emoji" x="0" y="7" text-anchor="middle">🎯</text>
+            <g class="node-badge" transform="translate(17, -17)"><circle cx="0" cy="0" r="11" /><text x="0" y="4.5" text-anchor="middle">2</text></g>
+            <g class="node-label-box" transform="translate(-126, -12)"><rect x="0" y="-14" width="94" height="30" rx="15" /><text x="47" y="6" text-anchor="middle">任務管理</text></g>
+          </g>
+
+          <g class="station-node" data-station="focus" transform="translate(298, 314)" tabindex="0" role="button" aria-label="第3站：專注時光">
+            <circle class="pulse-ring" cx="0" cy="0" r="26" /><circle class="node-bg" cx="0" cy="0" r="22" />
+            <text class="node-emoji" x="0" y="7" text-anchor="middle">🍅</text>
+            <g class="node-badge" transform="translate(17, -17)"><circle cx="0" cy="0" r="11" /><text x="0" y="4.5" text-anchor="middle">3</text></g>
+            <g class="node-label-box" transform="translate(32, -12)"><rect x="0" y="-14" width="94" height="30" rx="15" /><text x="47" y="6" text-anchor="middle">專注時光</text></g>
+          </g>
+
+          <g class="station-node" data-station="journal" transform="translate(202, 404)" tabindex="0" role="button" aria-label="第4站：TTL 日記">
+            <circle class="pulse-ring" cx="0" cy="0" r="26" /><circle class="node-bg" cx="0" cy="0" r="22" />
+            <text class="node-emoji" x="0" y="7" text-anchor="middle">📓</text>
+            <g class="node-badge" transform="translate(17, -17)"><circle cx="0" cy="0" r="11" /><text x="0" y="4.5" text-anchor="middle">4</text></g>
+            <g class="node-label-box" transform="translate(-126, -12)"><rect x="0" y="-14" width="94" height="30" rx="15" /><text x="47" y="6" text-anchor="middle">TTL 日記</text></g>
+          </g>
+
+          <g class="station-node" data-station="persona" transform="translate(76, 312)" tabindex="0" role="button" aria-label="認識島先生">
+            <circle class="pulse-ring" cx="0" cy="0" r="24" /><circle class="node-bg node-bg-alt" cx="0" cy="0" r="20" />
+            <text class="node-emoji" x="0" y="7" text-anchor="middle">🏝️</text>
+            <g class="node-label-box" transform="translate(-48, -46)"><rect x="0" y="-14" width="96" height="28" rx="14" /><text x="48" y="5" text-anchor="middle">認識島先生</text></g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="rhythm-strip">
+        <div class="rhythm-title">島先生的核心節奏</div>
+        <div class="rhythm-flow">
+          <span>認識自己</span><i>→</i><span>掌握時間</span><i>→</i><span>專注行動</span><i>→</i><span>定期回顧</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="detail-panel" id="detailPanel" aria-live="polite"></aside>
+  </main>
+
+  <footer class="footer">
+    <p>
+      🏝️ 島先生的時間管理日記｜
+      <a href="https://app.notion.com/p/3-54a3dd902f7e83fcb38e01f32885689d" target="_blank" rel="noopener noreferrer">前往 Notion 作業主頁 ↗</a>
+    </p>
+  </footer>
+
+  <script>
+const NOTION_URLS = {
+  home: "https://app.notion.com/p/3-54a3dd902f7e83fcb38e01f32885689d",
+  persona: "https://app.notion.com/p/2d63dd902f7e8237bfb181af37c0db43",
+  pomodoro: "https://kurt61303tw-glitch.github.io/mr-island-pomodoro/",
+  inboxDb: "https://app.notion.com/p/a4e3dd902f7e82418b0881fcd807ef23",
+  inboxPending: "https://app.notion.com/p/41d3dd902f7e8042847bd4b48e3b17fa",
+  inboxStatus: "https://app.notion.com/p/41d3dd902f7e800ba452d81b9c5b8f0d",
+  tasksDb: "https://app.notion.com/p/a2c3dd902f7e820b9a7301ae0bc14594",
+  tasksToday: "https://app.notion.com/p/41d3dd902f7e80caa608d454dee28956",
+  tasksWeek: "https://app.notion.com/p/41d3dd902f7e805db1fde053bcfa9464",
+  tasksPastWeek: "https://app.notion.com/p/41d3dd902f7e807cac65fcb29dcb6634",
+  tasksCategory: "https://app.notion.com/p/41d3dd902f7e80e2b0b9d4e8acff4085",
+  journalDb: "https://app.notion.com/p/f543dd902f7e830db25d81eb7fa51594",
+  journalToday: "https://app.notion.com/p/41d3dd902f7e80029ac8c017924465f3",
+  journalWeek: "https://app.notion.com/p/41d3dd902f7e809c94b1cc28bcbfe678",
+  journalPastWeek: "https://app.notion.com/p/41d3dd902f7e8000a814f8cc045ea784",
+};
+
+const STATION_ORDER = ["inbox", "tasks", "focus", "journal", "persona"];
+
+const STATIONS = {
+  inbox: {
+    id: "inbox", kicker: "第 1 站｜北・台北", title: "📝 速記區",
+    subtitle: "想法一閃而過？先丟進來，不打斷專注。",
+    primaryCta: { label: "打開「待處理」", url: NOTION_URLS.inboxPending },
+    beginner: {
+      steps: [
+        { title: "隨手記錄", desc: "在「待處理」新增一筆，寫下想法即可，時間會自動記錄。" },
+        { title: "定期清空", desc: "處理完後把狀態改成「已處理」，清單保持乾淨。" },
+        { title: "轉成任務", desc: "需要排時間做的事，直接按「新建任務鈕」送到第 2 站。" },
+      ],
+      tip: "💡 重點：先記下來清空大腦，不用急著分類！",
+    },
+    pro: {
+      architecture: "獨立收件匣資料庫，透過 Button 一鍵轉入任務庫，讓「捕捉」與「排程」分離。",
+      schema: [
+        { name: "速記內容", type: "title", desc: "靈感或臨時待辦" },
+        { name: "速記時間", type: "created_time", desc: "自動記錄建立時間" },
+        { name: "處理狀態", type: "select", desc: "未處理 / 已處理" },
+        { name: "新建任務鈕", type: "button", desc: "一鍵建立任務" },
+      ],
+      proTip: "🔧 篩選邏輯：「待處理」顯示未處理或空白紀錄。",
+    },
+    links: [
+      { title: "📌 待處理", desc: "快速新增與整理", url: NOTION_URLS.inboxPending },
+      { title: "📊 狀況分類", desc: "查看全部速記", url: NOTION_URLS.inboxStatus },
+      { title: "🗄️ 速記資料庫", desc: "原始資料庫", url: NOTION_URLS.inboxDb, proOnly: true },
+    ],
+  },
+  tasks: {
+    id: "tasks", kicker: "第 2 站｜中・台中", title: "🎯 任務管理",
+    subtitle: "排出輕重緩急，做完也不會消失，方便回顧。",
+    primaryCta: { label: "打開「今日任務」", url: NOTION_URLS.tasksToday },
+    beginner: {
+      steps: [
+        { title: "填名稱與預計日期", desc: "加上預計完成日期，任務就會自動排進「今日」或「本週」。" },
+        { title: "選四象限排序", desc: "優先做「🔥 重要且緊急」與「🌱 重要但不緊急」。" },
+        { title: "更新進度並連日記", desc: "開始改「進行中」、做完改「已完成」，也可連到今天日記。" },
+      ],
+      tip: "💡 提醒：沒填日期的任務不會出現在今日分頁，但都在「任務分類」裡。",
+    },
+    pro: {
+      architecture: "獨立任務庫，與 TTL 日記雙向 Relation，搭配 3 個公式自動算倒數與今日狀態。",
+      schema: [
+        { name: "任務名稱", type: "title", desc: "具體行動項目" },
+        { name: "預計完成日期", type: "date", desc: "預計期限（非實際完成日）" },
+        { name: "四象限選擇", type: "select", desc: "🔥 / 🌱 / 📬 / 🍃" },
+        { name: "進度管理", type: "status", desc: "尚未開始 / 進行中 / 已完成" },
+        { name: "關聯日誌", type: "relation", badgeClass: "relation", desc: "雙向連動 TTL 日記" },
+        { name: "今天任務 / 剩餘時間", type: "formula", badgeClass: "formula", desc: "自動判斷期限與逾期 ❌" },
+      ],
+      proTip: "🔧 週回顧：用「過去一週」分頁篩選「已完成」即可快速盤點產出。",
+    },
+    links: [
+      { title: "☀️ 今日任務", desc: "今天要做的事", url: NOTION_URLS.tasksToday },
+      { title: "🗓️ 本週安排", desc: "整週任務節奏", url: NOTION_URLS.tasksWeek },
+      { title: "⏪ 過去一週", desc: "回看近期任務", url: NOTION_URLS.tasksPastWeek },
+      { title: "🏷️ 任務分類", desc: "全部任務總覽", url: NOTION_URLS.tasksCategory },
+      { title: "🗄️ 任務資料庫", desc: "原始資料庫", url: NOTION_URLS.tasksDb, proOnly: true },
+    ],
+  },
+  focus: {
+    id: "focus", kicker: "第 3 站｜東・花東", title: "🍅 專注時光",
+    subtitle: "開勿擾、按番茄鐘，一次只專心做一件事。",
+    primaryCta: { label: "開啟番茄鐘", url: NOTION_URLS.pomodoro },
+    beginner: {
+      steps: [
+        { title: "挑一件最重要的事", desc: "從「今日任務」選一件最關鍵的事，手機開勿擾。" },
+        { title: "啟動島先生番茄鐘", desc: "保留一段不被打擾的時間，訊息留到空檔再一起回。" },
+        { title: "順手記下花費時間", desc: "結束後在日記內文簡單記下耗時，幫自己看見時間去向。" },
+      ],
+      tip: "💡 重點：時間手動紀錄即可，目的是誠實看見時間花去哪裡。",
+    },
+    pro: {
+      architecture: "以 GitHub Pages 輕量網頁內嵌 Notion (/embed)，免複雜計時公式，載入最快。",
+      schema: [
+        { name: "番茄鐘工具", type: "embed", desc: "島先生專屬線上計時器" },
+        { name: "專注配置", type: "workflow", desc: "每日保護 4h 深度工作 + 2h 集中溝通" },
+        { name: "時間留存", type: "manual", desc: "於當日日記內文手動記錄實際耗時" },
+      ],
+      proTip: "🔧 建議：把雜事集中到固定 2 小時處理，保護連續專注力。",
+    },
+    links: [
+      { title: "🍅 島先生番茄鐘", desc: "馬上開始計時", url: NOTION_URLS.pomodoro },
+      { title: "☀️ 今日任務", desc: "挑下一個專注項目", url: NOTION_URLS.tasksToday },
+      { title: "📓 今天日記", desc: "記下專注耗時", url: NOTION_URLS.journalToday },
+    ],
+  },
+  journal: {
+    id: "journal", kicker: "第 4 站｜南・台南主場", title: "📓 TTL 日記",
+    subtitle: "每天 3 分鐘寫感謝、學習與反思，週末一覽成長。",
+    primaryCta: { label: "打開「今天日記」", url: NOTION_URLS.journalToday },
+    beginner: {
+      steps: [
+        { title: "開啟今天日記", desc: "寫上標題、選一個「今日心情」表情（🥰 / 😶 / 😧 / 🥲 / 💩）。" },
+        { title: "隨興寫 TTL", desc: "簡單記下感謝、學習、反思或改善點，沒靈感留白也沒關係！" },
+        { title: "週末看「過去一週」", desc: "不用點開每篇，直接一覽整週紀錄，看完勾選「回顧完成」。" },
+      ],
+      tip: "💡 提醒：「日期」由系統自動記錄，建議當天建立日記喔。",
+    },
+    pro: {
+      architecture: "將 TTL 抽離成獨立 Text 欄位並開啟換行 (Wrap)，搭配過去一週 Filter，達成免點開一覽整週。",
+      schema: [
+        { name: "日記名稱 / 日期", type: "title", desc: "標題與自動建立時間" },
+        { name: "今日心情", type: "select", desc: "5 種心情標籤" },
+        { name: "感謝 / 學習 / 反思 / 改善點", type: "text", desc: "TTL 核心欄位（建議開換行）" },
+        { name: "關聯任務", type: "relation", badgeClass: "relation", desc: "雙向連動任務庫" },
+        { name: "回顧完成", type: "checkbox", desc: "週回顧確認勾選" },
+      ],
+      proTip: "🔧 共享提醒：調整檢視後記得按「Save for everyone」才會同步給大家。",
+    },
+    links: [
+      { title: "✍️ 今天日記", desc: "寫下今日 TTL", url: NOTION_URLS.journalToday },
+      { title: "📅 本週日記", desc: "本週所有日記", url: NOTION_URLS.journalWeek },
+      { title: "🔍 過去一週", desc: "免點開一覽週回顧", url: NOTION_URLS.journalPastWeek },
+      { title: "🗄️ 日記資料庫", desc: "原始資料庫", url: NOTION_URLS.journalDb, proOnly: true },
+    ],
+  },
+  persona: {
+    id: "persona", kicker: "離島燈塔｜澎湖", title: "🏝️ 認識島先生",
+    subtitle: "32 歲台南自由工作者，重視不受打擾的簡單節奏。",
+    primaryCta: { label: "看完整人物誌", url: NOTION_URLS.persona },
+    beginner: {
+      steps: [
+        { title: "島型工作者特質", desc: "行程簡單規律、低頻聯繫他人，最需要連續專注時間。" },
+        { title: "為什麼要分 4 站？", desc: "速記、任務、專注、日記各司其職，介面清爽不怕亂。" },
+        { title: "每日三問就好", desc: "今天完成什麼？學到什麼？明天想調整什麼？" },
+      ],
+      tip: "💡 核心理念：不是排滿行程，而是找到舒服且可持續的生活節奏。",
+    },
+    pro: {
+      architecture: "三庫分離正規化設計（速記 / 任務 / 日記），兼顧個人每日回顧與團隊週報展示。",
+      schema: [
+        { name: "深度工作", type: "4 小時", desc: "連續不受打擾的專注" },
+        { name: "行政溝通", type: "2 小時", desc: "集中處理訊息雜務" },
+        { name: "學習與回顧", type: "2h + 1h", desc: "閱讀上課＋TTL 沉澱" },
+        { name: "生活與睡眠", type: "7h + 8h", desc: "維持長期能量恢復" },
+      ],
+      proTip: "🔧 設計原則：降低每天打開的摩擦力，比追求 100% 自動化更重要。",
+    },
+    showHoursBar: true,
+    links: [
+      { title: "🏝️ 島先生人物誌", desc: "完整角色與痛點", url: NOTION_URLS.persona },
+      { title: "🏠 Notion 主頁", desc: "返回作業首頁", url: NOTION_URLS.home },
+    ],
+  },
+};
+
+const state = {
+  mode: localStorage.getItem("mr_island_mode") || "beginner",
+  theme: localStorage.getItem("mr_island_theme") || "day",
+  station: "inbox",
+};
+
+const htmlEl = document.documentElement;
+const detailPanel = document.getElementById("detailPanel");
+const btnBeginner = document.getElementById("btnBeginner");
+const btnPro = document.getElementById("btnPro");
+const themeToggle = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
+const themeLabel = document.getElementById("themeLabel");
+const bannerTag = document.getElementById("bannerTag");
+const bannerDesc = document.getElementById("bannerDesc");
+const mapTitle = document.getElementById("mapTitle");
+const mapHint = document.getElementById("mapHint");
+const stationNodes = document.querySelectorAll(".station-node");
+const stepPills = document.querySelectorAll(".step-pill");
+
+function initStars() {
+  const container = document.getElementById("stars");
+  if (!container) return;
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 48; i++) {
+    const s = document.createElement("span");
+    s.className = "star";
+    const size = Math.random() * 2.4 + 1.2;
+    s.style.width = `${size}px`; s.style.height = `${size}px`;
+    s.style.left = `${Math.random() * 100}%`; s.style.top = `${Math.random() * 75}%`;
+    s.style.animationDelay = `${(Math.random() * 3.5).toFixed(2)}s`;
+    frag.appendChild(s);
+  }
+  container.appendChild(frag);
+}
+
+function applyTheme(theme) {
+  state.theme = theme;
+  htmlEl.setAttribute("data-theme", theme);
+  localStorage.setItem("mr_island_theme", theme);
+  themeIcon.textContent = theme === "night" ? "🌙" : "☀️";
+  themeLabel.textContent = theme === "night" ? "夜間" : "白天";
+}
+
+function applyMode(mode) {
+  state.mode = mode;
+  htmlEl.setAttribute("data-mode", mode);
+  localStorage.setItem("mr_island_mode", mode);
+  btnBeginner.classList.toggle("active", mode === "beginner");
+  btnPro.classList.toggle("active", mode === "pro");
+  if (mode === "beginner") {
+    bannerTag.textContent = "🌱 初學者導覽";
+    bannerDesc.innerHTML = "照著台灣島 <strong>1 → 2 → 3 → 4</strong> 點擊，就能看懂每天怎麼用，並直達對應 Notion 欄位。";
+    mapTitle.textContent = "🗺️ 台灣島環島地圖";
+    mapHint.textContent = "點擊島上地標，查看教學與連結";
+  } else {
+    bannerTag.textContent = "🧭 老鳥架構模式";
+    bannerDesc.innerHTML = "顯示 <strong>資料庫關聯 (Relation)</strong>、完整屬性欄位表，以及底層原始資料庫入口。";
+    mapTitle.textContent = "🗺️ 台灣島系統架構圖";
+    mapHint.textContent = "紫色虛線為資料庫雙向關聯與按鈕觸發";
+  }
+  renderDetail();
+}
+
+function selectStation(stationId) {
+  if (!STATIONS[stationId]) return;
+  state.station = stationId;
+  stationNodes.forEach((node) => node.classList.toggle("active", node.dataset.station === stationId));
+  stepPills.forEach((pill) => pill.classList.toggle("active", pill.dataset.station === stationId));
+  renderDetail();
+}
+
+function buildHoursBarHtml() {
+  const segments = [
+    { label: "深度工作 4h", pct: (4 / 24) * 100, color: "#167d8d" },
+    { label: "行政溝通 2h", pct: (2 / 24) * 100, color: "#54a6a3" },
+    { label: "學習 2h", pct: (2 / 24) * 100, color: "#2d8a61" },
+    { label: "回顧 1h", pct: (1 / 24) * 100, color: "#d97736" },
+    { label: "生活休息 7h", pct: (7 / 24) * 100, color: "#e9b872" },
+    { label: "睡眠 8h", pct: (8 / 24) * 100, color: "#6b52ae" },
+  ];
+  const barSpans = segments.map((seg) => `<span style="width:${seg.pct.toFixed(2)}%;background:${seg.color};" title="${seg.label}"></span>`).join("");
+  const legendItems = segments.map((seg) => `<div class="hour-item"><span class="hour-swatch" style="background:${seg.color};"></span><span>${seg.label}</span></div>`).join("");
+  return `<div class="section-block"><div class="section-label">⏳ 島先生的一天（24 小時）</div><div class="hours-bar">${barSpans}</div><div class="hours-legend">${legendItems}</div></div>`;
+}
+
+function renderDetail() {
+  const data = STATIONS[state.station];
+  const isPro = state.mode === "pro";
+  const currentIdx = STATION_ORDER.indexOf(state.station);
+  const prevId = STATION_ORDER[(currentIdx - 1 + STATION_ORDER.length) % STATION_ORDER.length];
+  const nextId = STATION_ORDER[(currentIdx + 1) % STATION_ORDER.length];
+
+  const visibleLinks = data.links.filter((link) => isPro || !link.proOnly);
+  const linksHtml = visibleLinks.map((link) => `
+      <a class="notion-link-card" href="${link.url}" target="_blank" rel="noopener noreferrer">
+        <div class="link-top"><span>${link.title}</span><span class="ext" aria-hidden="true">↗</span></div>
+        <span class="link-desc">${link.desc}</span>
+      </a>`).join("");
+
+  let coreSectionHtml = "";
+  if (!isPro) {
+    const stepsHtml = data.beginner.steps.map((step, idx) => `
+        <li class="step-card">
+          <span class="step-num">${idx + 1}</span>
+          <div class="step-body"><strong>${step.title}</strong><p>${step.desc}</p></div>
+        </li>`).join("");
+    coreSectionHtml = `
+      <div class="section-block"><div class="section-label">🌱 簡單 3 步驟</div><ol class="steps-list">${stepsHtml}</ol></div>
+      ${data.showHoursBar ? buildHoursBarHtml() : ""}
+      <div class="section-block"><div class="tip-box">${data.beginner.tip}</div></div>`;
+  } else {
+    const schemaRows = data.pro.schema.map((col) => `
+        <tr><td><strong>${col.name}</strong></td><td><span class="type-badge ${col.badgeClass || ""}">${col.type}</span></td><td>${col.desc}</td></tr>`).join("");
+    coreSectionHtml = `
+      <div class="section-block"><div class="section-label">🧭 設計重點</div><p class="arch-text">${data.pro.architecture}</p></div>
+      ${data.showHoursBar ? buildHoursBarHtml() : ""}
+      <div class="section-block"><div class="section-label">🗂️ 主要欄位對照</div>
+        <table class="schema-table"><thead><tr><th>欄位</th><th>類型</th><th>用途</th></tr></thead><tbody>${schemaRows}</tbody></table>
+      </div>
+      <div class="section-block"><div class="tip-box">${data.pro.proTip}</div></div>`;
+  }
+
+  detailPanel.innerHTML = `
+    <div class="panel-head">
+      <div><div class="station-kicker">${data.kicker}</div><h2>${data.title}</h2><p class="panel-subtitle">${data.subtitle}</p></div>
+      <a class="primary-cta" href="${data.primaryCta.url}" target="_blank" rel="noopener noreferrer"><span>${data.primaryCta.label} ↗</span></a>
+    </div>
+    ${coreSectionHtml}
+    <div class="section-block"><div class="section-label">🔗 直達對應 Notion 欄位</div><div class="links-grid">${linksHtml}</div></div>
+    <div class="panel-nav">
+      <button class="nav-btn" id="prevStationBtn">← ${STATIONS[prevId].title}</button>
+      <button class="nav-btn" id="nextStationBtn">${STATIONS[nextId].title} →</button>
+    </div>`;
+
+  document.getElementById("prevStationBtn").addEventListener("click", () => selectStation(prevId));
+  document.getElementById("nextStationBtn").addEventListener("click", () => selectStation(nextId));
+}
+
+btnBeginner.addEventListener("click", () => applyMode("beginner"));
+btnPro.addEventListener("click", () => applyMode("pro"));
+themeToggle.addEventListener("click", () => applyTheme(state.theme === "day" ? "night" : "day"));
+stationNodes.forEach((node) => {
+  node.addEventListener("click", () => selectStation(node.dataset.station));
+  node.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectStation(node.dataset.station); } });
+});
+stepPills.forEach((pill) => pill.addEventListener("click", () => selectStation(pill.dataset.station)));
+
+initStars();
+applyTheme(state.theme);
+applyMode(state.mode);
+selectStation("inbox");
+  </script>
+</body>
+</html>
